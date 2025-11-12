@@ -43,7 +43,7 @@ public class CalculatorApp extends JFrame implements ActionListener {
         mainPanel.add(displayPanel, BorderLayout.NORTH);
 
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(5, 4, 10, 10));
+        buttonPanel.setLayout(new GridLayout(6, 4, 10, 10)); // 6 σειρές για τα νέα κουμπιά
         buttonPanel.setBackground(new Color(25, 25, 25));
 
         String[] buttons = {
@@ -51,7 +51,8 @@ public class CalculatorApp extends JFrame implements ActionListener {
                 "7", "8", "9", "*",
                 "4", "5", "6", "-",
                 "1", "2", "3", "+",
-                "0", ".", "="
+                "0", ".", "=", "%",
+                "√", "^"
         };
 
         for (String text : buttons) {
@@ -68,7 +69,6 @@ public class CalculatorApp extends JFrame implements ActionListener {
         JButton button = new JButton(text);
         button.setFont(new Font("Segoe UI", Font.BOLD, 22));
         button.setFocusPainted(false);
-        button.setContentAreaFilled(true);
         button.setBorderPainted(false);
         button.setFocusable(false);
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -92,11 +92,6 @@ public class CalculatorApp extends JFrame implements ActionListener {
             button.setForeground(Color.WHITE);
         }
 
-        // 🚫 Καμία αλλαγή στο hover/click
-        button.getModel().addChangeListener(e -> {
-            button.setBackground(button.getBackground());
-        });
-
         button.addActionListener(this);
         return button;
     }
@@ -105,14 +100,20 @@ public class CalculatorApp extends JFrame implements ActionListener {
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
 
-        if (command.matches("[0-9]") || command.equals(".") || command.matches("[+\\-*/()]")) {
+        if (command.matches("[0-9]") || command.equals(".") || command.matches("[+\\-*/%^()]")) {
             expression += command;
             expressionDisplay.setText(expression);
-        } else if (command.equals("C")) {
+        }
+        else if (command.equals("√")) {
+            expression += "√";
+            expressionDisplay.setText(expression);
+        }
+        else if (command.equals("C")) {
             expression = "";
             expressionDisplay.setText("");
             resultDisplay.setText("");
-        } else if (command.equals("=")) {
+        }
+        else if (command.equals("=")) {
             calculateResult();
         }
     }
@@ -155,11 +156,21 @@ public class CalculatorApp extends JFrame implements ActionListener {
                     numbers.push(applyOp(ops.pop(), numbers.pop(), numbers.pop()));
                 }
                 ops.pop();
-            } else if ("+-*/".indexOf(ch) != -1) {
+            } else if ("+-*/%^".indexOf(ch) != -1) {
                 while (!ops.isEmpty() && precedence(ops.peek()) >= precedence(ch)) {
                     numbers.push(applyOp(ops.pop(), numbers.pop(), numbers.pop()));
                 }
                 ops.push(ch);
+            } else if (ch == '√') {
+                // Υπολογισμός τετραγωνικής ρίζας του επόμενου αριθμού
+                i++;
+                StringBuilder sb = new StringBuilder();
+                while (i < expr.length() && (Character.isDigit(expr.charAt(i)) || expr.charAt(i) == '.')) {
+                    sb.append(expr.charAt(i++));
+                }
+                double value = Math.sqrt(Double.parseDouble(sb.toString()));
+                numbers.push(value);
+                continue;
             }
             i++;
         }
@@ -171,7 +182,8 @@ public class CalculatorApp extends JFrame implements ActionListener {
 
     private int precedence(char op) {
         if (op == '+' || op == '-') return 1;
-        if (op == '*' || op == '/') return 2;
+        if (op == '*' || op == '/' || op == '%') return 2;
+        if (op == '^') return 3;
         return 0;
     }
 
@@ -181,12 +193,11 @@ public class CalculatorApp extends JFrame implements ActionListener {
             case '-': return a - b;
             case '*': return a * b;
             case '/':
-                if (b == 0) {
-                    throw new ArithmeticException("Division by zero");
-                }
+                if (b == 0) throw new ArithmeticException("Division by zero");
                 return a / b;
-            default:
-                throw new IllegalArgumentException("Άγνωστη πράξη");
+            case '%': return a % b;
+            case '^': return Math.pow(a, b);
+            default: throw new IllegalArgumentException("Άγνωστη πράξη");
         }
     }
 
