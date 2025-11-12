@@ -1,19 +1,7 @@
-//
-// Source code recreated from a .class file by IntelliJ IDEA
-// (powered by FernFlower decompiler)
-//
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.GridLayout;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 public class CalculatorApp extends JFrame implements ActionListener {
     private JTextField display;
@@ -27,19 +15,20 @@ public class CalculatorApp extends JFrame implements ActionListener {
         this.setSize(420, 600);
         this.getContentPane().setBackground(new Color(45, 45, 45));
         this.setLayout(new BorderLayout());
-        this.setDefaultCloseOperation(3);
+        this.setDefaultCloseOperation(EXIT_ON_CLOSE);
 
-        this.display = new JTextField();
-        this.display.setFont(new Font("Arial", 1, 28));
-        this.display.setEditable(false);
-        this.add(this.display, "North");
+        // Πεδίο εμφάνισης
+        display = new JTextField();
+        display.setFont(new Font("Arial", Font.BOLD, 28));
+        display.setEditable(false);
+        this.add(display, BorderLayout.NORTH);
 
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(4, 4, 10, 10));
-        panel.setBackground(new Color(60, 60, 60));
+        // === Κύριο panel με αριθμούς και βασικούς τελεστές ===
+        JPanel panelMain = new JPanel();
+        panelMain.setLayout(new GridLayout(4, 4, 10, 10));
+        panelMain.setBackground(new Color(60, 60, 60));
 
-        // ✅ Δεν αλλάζουμε δομή — κρατάμε ίδια κουμπιά
-        String[] buttons = new String[]{
+        String[] buttons = {
                 "7", "8", "9", "/",
                 "4", "5", "6", "*",
                 "1", "2", "3", "-",
@@ -48,7 +37,7 @@ public class CalculatorApp extends JFrame implements ActionListener {
 
         for (String text : buttons) {
             JButton button = new JButton(text);
-            button.setFont(new Font("Arial", 1, 22));
+            button.setFont(new Font("Arial", Font.BOLD, 22));
             button.setFocusPainted(false);
 
             if (text.equals("C")) {
@@ -66,103 +55,85 @@ public class CalculatorApp extends JFrame implements ActionListener {
             }
 
             button.addActionListener(this);
-            panel.add(button);
+            panelMain.add(button);
         }
 
-        // ✅ Προσθέτουμε τρία νέα κουμπιά ξεχωριστά (χωρίς να αλλάξει δομή πλέγματος)
-        JButton sqrtButton = new JButton("√");
-        JButton powButton = new JButton("^");
-        JButton modButton = new JButton("%");
+        // === ΝΕΟ panel για √ ^ % ===
+        JPanel panelExtra = new JPanel();
+        panelExtra.setLayout(new GridLayout(1, 3, 10, 10));
+        panelExtra.setBackground(new Color(60, 60, 60));
 
-        JButton[] extraButtons = {sqrtButton, powButton, modButton};
-        for (JButton b : extraButtons) {
-            b.setFont(new Font("Arial", Font.BOLD, 22));
-            b.setFocusPainted(false);
-            b.setBackground(new Color(90, 90, 90));
-            b.setForeground(Color.WHITE);
-            b.addActionListener(this);
-            panel.add(b);
+        String[] extras = {"√", "^", "%"};
+        for (String text : extras) {
+            JButton button = new JButton(text);
+            button.setFont(new Font("Arial", Font.BOLD, 22));
+            button.setFocusPainted(false);
+            button.setBackground(new Color(90, 90, 90));
+            button.setForeground(Color.WHITE);
+            button.addActionListener(this);
+            panelExtra.add(button);
         }
 
-        this.add(panel, "Center");
-        this.setLocationRelativeTo((Component) null);
+        // Ενώνουμε τα δύο panels σε ένα κεντρικό container
+        JPanel allPanels = new JPanel(new BorderLayout(10, 10));
+        allPanels.add(panelExtra, BorderLayout.NORTH);
+        allPanels.add(panelMain, BorderLayout.CENTER);
+
+        this.add(allPanels, BorderLayout.CENTER);
+        this.setLocationRelativeTo(null);
         this.setVisible(true);
     }
 
+    @Override
     public void actionPerformed(ActionEvent e) {
         String command = e.getActionCommand();
 
-        // ✅ αριθμοί
         if (Character.isDigit(command.charAt(0))) {
-            this.display.setText(this.display.getText() + command);
-        }
-
-        // ✅ καθαρισμός
-        else if (command.equals("C")) {
-            this.display.setText("");
-            this.num1 = this.num2 = this.result = 0.0;
-        }
-
-        // ✅ τετραγωνική ρίζα
-        else if (command.equals("√")) {
+            display.setText(display.getText() + command);
+        } else if (command.equals("C")) {
+            display.setText("");
+            num1 = num2 = result = 0;
+        } else if (command.equals("√")) {
             try {
-                double value = Double.parseDouble(this.display.getText());
+                double value = Double.parseDouble(display.getText());
                 if (value < 0) {
-                    this.display.setText("Σφάλμα: Αρνητικός");
+                    display.setText("Σφάλμα: Αρνητικός");
                 } else {
-                    this.result = Math.sqrt(value);
-                    this.display.setText(String.valueOf(this.result));
+                    result = Math.sqrt(value);
+                    display.setText(String.valueOf(result));
                 }
             } catch (Exception ex) {
-                this.display.setText("Σφάλμα");
+                display.setText("Σφάλμα");
             }
-        }
-
-        // ✅ υπολογισμός (=)
-        else if (command.equals("=")) {
+        } else if (command.equals("=")) {
             try {
-                String[] parts = this.display.getText().split("[\\+\\-\\*/\\^%]");
+                String[] parts = display.getText().split("[\\+\\-\\*/\\^%]");
                 if (parts.length < 2) return;
 
-                this.num1 = Double.parseDouble(parts[0]);
-                this.num2 = Double.parseDouble(parts[1]);
+                num1 = Double.parseDouble(parts[0]);
+                num2 = Double.parseDouble(parts[1]);
 
-                switch (this.operator) {
-                    case '*':
-                        this.result = this.num1 * this.num2;
-                        break;
-                    case '+':
-                        this.result = this.num1 + this.num2;
-                        break;
-                    case '-':
-                        this.result = this.num1 - this.num2;
-                        break;
+                switch (operator) {
+                    case '+': result = num1 + num2; break;
+                    case '-': result = num1 - num2; break;
+                    case '*': result = num1 * num2; break;
                     case '/':
-                        if (this.num2 == 0.0) {
-                            this.display.setText("Σφάλμα: 0");
+                        if (num2 == 0) {
+                            display.setText("Σφάλμα: 0");
                             return;
                         }
-                        this.result = this.num1 / this.num2;
-                        break;
-                    case '^':
-                        this.result = Math.pow(this.num1, this.num2);
-                        break;
-                    case '%':
-                        this.result = (this.num1 * this.num2) / 100.0;
-                        break;
+                        result = num1 / num2; break;
+                    case '^': result = Math.pow(num1, num2); break;
+                    case '%': result = (num1 * num2) / 100; break;
                 }
-
-                this.display.setText(String.valueOf(this.result));
+                display.setText(String.valueOf(result));
             } catch (Exception ex) {
-                this.display.setText("Σφάλμα");
+                display.setText("Σφάλμα");
             }
-        }
-
-        // ✅ τελεστές (συμπεριλαμβάνονται ^ και %)
-        else {
-            if (!this.display.getText().isEmpty()) {
-                this.operator = command.charAt(0);
-                this.display.setText(this.display.getText() + this.operator);
+        } else {
+            if (!display.getText().isEmpty()) {
+                operator = command.charAt(0);
+                display.setText(display.getText() + operator);
             }
         }
     }
