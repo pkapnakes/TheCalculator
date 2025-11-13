@@ -7,11 +7,13 @@ public class CalculatorApp extends JFrame implements ActionListener {
 
     private JTextField expressionDisplay;
     private JTextField resultDisplay;
+    private JTextArea historyArea; // 🆕 Πεδίο για το ιστορικό
+    private JButton clearHistoryButton; // 🆕 Κουμπί καθαρισμού
     private String expression = "";
 
     public CalculatorApp() {
         setTitle("Κομπιουτεράκι - Modern Dark UI");
-        setSize(420, 650);
+        setSize(600, 650); // λίγο πιο φαρδύ για να χωράει το ιστορικό
         getContentPane().setBackground(new Color(25, 25, 25));
         setLayout(new BorderLayout(10, 10));
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -21,6 +23,7 @@ public class CalculatorApp extends JFrame implements ActionListener {
         mainPanel.setBackground(new Color(25, 25, 25));
         add(mainPanel, BorderLayout.CENTER);
 
+        // === Επάνω Περιοχή Εμφάνισης ===
         JPanel displayPanel = new JPanel(new GridLayout(2, 1));
         displayPanel.setBackground(new Color(25, 25, 25));
 
@@ -42,8 +45,9 @@ public class CalculatorApp extends JFrame implements ActionListener {
         displayPanel.add(resultDisplay);
         mainPanel.add(displayPanel, BorderLayout.NORTH);
 
+        // === Κουμπιά ===
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(6, 4, 10, 10)); // 6 σειρές για τα νέα κουμπιά
+        buttonPanel.setLayout(new GridLayout(6, 4, 10, 10));
         buttonPanel.setBackground(new Color(25, 25, 25));
 
         String[] buttons = {
@@ -60,7 +64,44 @@ public class CalculatorApp extends JFrame implements ActionListener {
             buttonPanel.add(btn);
         }
 
-        mainPanel.add(buttonPanel, BorderLayout.CENTER);
+        // === Panel για κουμπιά και ιστορικό ===
+        JPanel centerPanel = new JPanel(new GridLayout(1, 2, 10, 10));
+        centerPanel.setBackground(new Color(25, 25, 25));
+        centerPanel.add(buttonPanel);
+
+        // === Ιστορικό ===
+        JPanel historyPanel = new JPanel(new BorderLayout(5, 5));
+        historyPanel.setBackground(new Color(25, 25, 25));
+
+        historyArea = new JTextArea();
+        historyArea.setEditable(false);
+        historyArea.setFont(new Font("Consolas", Font.PLAIN, 16));
+        historyArea.setBackground(new Color(35, 35, 35));
+        historyArea.setForeground(new Color(0, 255, 150));
+        historyArea.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(new Color(80, 80, 80)),
+                "Ιστορικό",
+                0, 0,
+                new Font("Segoe UI", Font.BOLD, 14),
+                new Color(180, 180, 180)
+        ));
+
+        JScrollPane historyScroll = new JScrollPane(historyArea);
+        historyPanel.add(historyScroll, BorderLayout.CENTER);
+
+        // 🆕 Κουμπί καθαρισμού ιστορικού
+        clearHistoryButton = new JButton("Καθαρισμός Ιστορικού");
+        clearHistoryButton.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        clearHistoryButton.setBackground(new Color(80, 0, 0));
+        clearHistoryButton.setForeground(Color.WHITE);
+        clearHistoryButton.setFocusPainted(false);
+        clearHistoryButton.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        clearHistoryButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        clearHistoryButton.addActionListener(e -> historyArea.setText(""));
+        historyPanel.add(clearHistoryButton, BorderLayout.SOUTH);
+
+        centerPanel.add(historyPanel);
+        mainPanel.add(centerPanel, BorderLayout.CENTER);
 
         setVisible(true);
     }
@@ -74,7 +115,6 @@ public class CalculatorApp extends JFrame implements ActionListener {
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
         button.setOpaque(true);
 
-        // 🎨 Χρώματα ανά είδος κουμπιού
         if (text.matches("[0-9\\.]")) {
             button.setBackground(new Color(70, 70, 70));
             button.setForeground(Color.WHITE);
@@ -103,17 +143,14 @@ public class CalculatorApp extends JFrame implements ActionListener {
         if (command.matches("[0-9]") || command.equals(".") || command.matches("[+\\-*/%^()]")) {
             expression += command;
             expressionDisplay.setText(expression);
-        }
-        else if (command.equals("√")) {
+        } else if (command.equals("√")) {
             expression += "√";
             expressionDisplay.setText(expression);
-        }
-        else if (command.equals("C")) {
+        } else if (command.equals("C")) {
             expression = "";
             expressionDisplay.setText("");
             resultDisplay.setText("");
-        }
-        else if (command.equals("=")) {
+        } else if (command.equals("=")) {
             calculateResult();
         }
     }
@@ -126,6 +163,10 @@ public class CalculatorApp extends JFrame implements ActionListener {
             }
             resultDisplay.setForeground(new Color(0, 255, 120));
             resultDisplay.setText("= " + result);
+
+            // 🆕 Ενημέρωση ιστορικού
+            historyArea.append(expression + " = " + result + "\n");
+
         } catch (Exception ex) {
             resultDisplay.setForeground(Color.RED);
             resultDisplay.setText("Error");
@@ -162,7 +203,6 @@ public class CalculatorApp extends JFrame implements ActionListener {
                 }
                 ops.push(ch);
             } else if (ch == '√') {
-                // Υπολογισμός τετραγωνικής ρίζας του επόμενου αριθμού
                 i++;
                 StringBuilder sb = new StringBuilder();
                 while (i < expr.length() && (Character.isDigit(expr.charAt(i)) || expr.charAt(i) == '.')) {
